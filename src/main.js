@@ -1,7 +1,17 @@
 function ghapi(user,repo,pass){
   this.user = user;
   this.password = pass;
+  $.ajaxSetup({
+  beforeSend: function (xhr){ 
+        xhr.setRequestHeader('Authorization', make_base_auth(user, pass)); 
+    }
+});
   this.repo = repo;
+}
+function make_base_auth(user, password) {
+  var tok = user + ':' + password;
+  var hash = btoa(tok);
+  return "Basic " + hash;
 }
 ghapi.prototype.getData = function(url){
   return $.ajax({
@@ -21,15 +31,28 @@ ghapi.prototype.getCommitSha = function(ref){
 ghapi.prototype.getCommit = function(sha){
   return  this.getData('/git/commits/'+sha);
 };
-ghapi.prototype.makeParentArray = function(commit,addthis){
-  console.log(commit)
-  var out = [];
-  for(var i=0;i < commit.parents.length;i++)
-    out.push(commit.parents[i].sha);
-  if(addthis)
-    out.push(commit.sha);
-  return out;
+ghapi.prototype.makeTree = function(base,tree){
+  
 };
-a = new ghapi('thethirdone','github-api-testing');
-//console.log('hello',a.getData('/git/refs/heads/master',function(data){console.log(data)}));
-console.log(a.makeParentArray(a.getCommit(a.getCommitSha('master')),true));
+ghapi.prototype.getLeft = function(){
+  console.log($.ajax({
+    type: "GET",
+    url: 'https://api.github.com/zen',
+    crossDomain: true,
+    async:false,
+    failure: function(){console.log('error');},
+    dataType: 'json'
+  }).getAllResponseHeaders());
+};
+var a;
+function authenticate(){
+  a = new ghapi($('input#user').val(),$('input#repo').val(),$('input#pass').val());
+  localStorage.setItem('user',$('input#user').val());
+  localStorage.setItem('repo',$('input#repo').val());
+  localStorage.setItem('pass',$('input#pass').val());
+  console.log([a.getCommit(a.getCommitSha('master')).sha]);
+}
+$('input#user').val(localStorage.getItem('user'));
+$('input#repo').val(localStorage.getItem('repo'));
+$('input#pass').val(localStorage.getItem('pass'));
+
