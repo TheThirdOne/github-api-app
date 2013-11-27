@@ -1,5 +1,13 @@
 <html>
   <head>
+    <link rel="stylesheet" href="jquery-ui.css">
+    <script src="jquery-2.0.3.min.js"></script>
+    <script src="jquery-ui.js"></script>
+    <script>
+    $(function() {
+      $( "#tabs" ).tabs();
+    });
+    </script>
   </head>
   <body>
     <form onSubmit="authenticate()" action="javascript:">
@@ -8,7 +16,6 @@
       <input id="pass" type="password"></input>
       <input type="submit"></input>
     </form>
-    <script src="jquery-2.0.3.min.js"></script>
     <script src="src/main.js"></script>
   </body>
 </html>
