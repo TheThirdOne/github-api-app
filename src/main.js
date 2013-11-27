@@ -77,6 +77,22 @@ ghapi.prototype.makeCommit= function(message,parents,tree,branch){
   console.log(result);
   this.send("/git/refs/heads/"+branch,JSON.stringify({"sha":result.sha}),"PATCH");
 };
+ghapi.prototype.getFiles = function(sha){
+  console.log(sha);
+  var commit = this.getCommit(sha);
+  return this.treeToObject(commit.tree.sha);
+};
+ghapi.prototype.treeToObject = function(tree_sha){
+  var out = {};
+  var tree = this.getData('/git/trees/'+tree_sha).tree;
+  for(var i = 0;i < tree.length; i++){
+    if(tree[i].type === "tree")
+      out[tree[i].path] = this.treeToObject(tree[i].sha);
+    else
+      out[tree[i].path] = atob(unescape(this.getData('/git/blobs/'+tree[i].sha).content).replace(/\n/g,''));
+  }
+  return out;
+};
 var a;
 function authenticate(){
   a = new ghapi($('input#user').val(),$('input#repo').val(),$('input#pass').val());
@@ -92,6 +108,8 @@ $('input#pass').val(localStorage.getItem('pass'));
 function go(){
   commit = a.getCommit(a.getCommitSha('master'));
   parents = commit.sha;
+  
+  b = a.getFiles(commit.sha);
   tree_base = commit.tree.sha;
-  a.makeCommit("YAY",[parents],a.makeTree(tree_base,['hello.txt','yolo.txt']),"master");
+  //a.makeCommit("YAY",[parents],a.makeTree(tree_base,['hello.txt','yolo.txt']),"master");
 }
