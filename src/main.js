@@ -8,6 +8,7 @@ function ghapi(user,repo,pass){
 });
   this.repo = repo;
   this.blobs = [];
+  this.files = [];
 }
 function make_base_auth(user, password) {
   var tok = user + ':' + password;
@@ -76,6 +77,7 @@ ghapi.prototype.makeCommit= function(message,parents,tree,branch){
   result = this.putData("/git/commits",JSON.stringify(tosend));
   console.log(result);
   this.send("/git/refs/heads/"+branch,JSON.stringify({"sha":result.sha}),"PATCH");
+  this.blobs = [];
 };
 ghapi.prototype.getFiles = function(sha){
   console.log(sha);
@@ -94,41 +96,36 @@ ghapi.prototype.treeToObject = function(tree_sha){
   return out;
 };
 ghapi.prototype.displayBlobs = function(blobs,div){
-  console.log(blobs,div)
+  console.log(blobs,div);
   var main = "";
   var top = "<ul>";
   var todo = [];
   var i = 1;
   for(var key in blobs){
-    top += "<li><a href=\"#" + div + '-' + i + "\">"+key+"</a></li>";
+    top += "<li><a href=\"#" + div + '-' + i + "\">"+key+((typeof blobs[key] === 'string')?'':'/')+"</a></li>";
     if(typeof blobs[key] === 'string')
       main += "<div contenteditable data-type=\"blob\" data-key=\""+key+"\" id=\"" + div + '-' + i +"\">"+blobs[key].replace(/\n/g,'<br>')+"</div>";
     else{
       todo.push({'key':key,'i':i});
-      main += "<div contenteditable data-type=\"tree\" data-key=\""+key+"\" id=\"" + div + '-' + i +"\"></div>";
+      main += "<div data-type=\"tree\" data-key=\""+key+"\" id=\"" + div + '-' + i +"\"></div>";
     }
     i++;
   }
-  
   $("#"+div).html(top + "</ul>" + main);
   $('#'+div).tabs();
   for(var k in todo)
     this.displayBlobs(blobs[todo[k].key],div + '-' +  todo[k].i);
 };
 ghapi.prototype.commitChanges = function(div){
-
+  
 };
-ghapi.prototype.isDiff = function(blobs, div){
-  function diff(div,number){
-    return $('#'+div+'-'+number).html().replace(/<br>/g,'\n') !== b[$('#'+div+'-'+number).attr('data-key')];
-  }
+ghapi.prototype.makeBlobsFromDiff = function(blobs,div){
   for(var i = 1; i < $('#tabs').children().length; i++){
-    if($('#'+div+'-'+number).attr('data-type')==='tree'){
-      
-    }else{
-      
-    }
+    
   }
+};
+ghapi.prototype.isDiff = function(div){
+    return $('#'+div).html().replace(/<br>/g,'\n') !== b[$('#'+div).attr('data-key')];
 };
 var a;
 function authenticate(){
@@ -146,7 +143,7 @@ function go(){
   commit = a.getCommit(a.getCommitSha('master'));
   parents = commit.sha;
   
-  b = a.getFiles(commit.sha);
+  a.files = a.getFiles(commit.sha);
   tree_base = commit.tree.sha;
   //a.makeCommit("YAY",[parents],a.makeTree(tree_base,['hello.txt','yolo.txt']),"master");
 }
