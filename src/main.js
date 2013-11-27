@@ -120,10 +120,14 @@ ghapi.prototype.commitChanges = function(div){
 };
 ghapi.prototype.isDiff = function(blobs, div){
   function diff(div,number){
-    return $('#'+div+'-'+number).attr('data-type')!=='tree' && $('#'+div+'-'+number).html().replace(/<br>/g,'\n') !== b[$('#'+div+'-'+number).attr('data-key')];
+    return $('#'+div+'-'+number).html().replace(/<br>/g,'\n') !== b[$('#'+div+'-'+number).attr('data-key')];
   }
   for(var i = 1; i < $('#tabs').children().length; i++){
-  
+    if($('#'+div+'-'+number).attr('data-type')==='tree'){
+      
+    }else{
+      
+    }
   }
 };
 var a;
