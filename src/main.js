@@ -9,6 +9,7 @@ function ghapi(user,repo,pass){
   this.repo = repo;
   this.blobs = [];
   this.files = [];
+  this.paths = [];
 }
 function make_base_auth(user, password) {
   var tok = user + ':' + password;
@@ -116,16 +117,43 @@ ghapi.prototype.displayBlobs = function(blobs,div){
   for(var k in todo)
     this.displayBlobs(blobs[todo[k].key],div + '-' +  todo[k].i);
 };
-ghapi.prototype.commitChanges = function(div){
-  
+ghapi.prototype.commitChanges = function(div,message,branch){
+  this.makeBlobsFromDiff(div)
+  commit = this.getCommit(this.getCommitSha(branch));
+  parents = commit.sha;
+  tree_base = commit.tree.sha;
+  this.makeCommit(message,[parents],this.makeTree(tree_base,this.paths),branch);
 };
-ghapi.prototype.makeBlobsFromDiff = function(blobs,div){
-  for(var i = 1; i < $('#tabs').children().length; i++){
-    
+ghapi.prototype.makeBlobsFromDiff = function(div){
+  var todo = [];
+  for(var i = 1; i < $('#'+div).children().length; i++){
+    console.log('#'+div+'-'+i);
+    if($('#'+div+'-'+i).attr('data-type')==='blob'){
+      if(this.isDiff(div+'-'+i)){
+        this.addBlob($('#'+div+'-'+i).html().replace(/<br>/g,'\n'));
+        this.paths.push(this.getPath(div+'-'+i));
+      }
+    }else
+      this.makeBlobsFromDiff(div+'-'+i);
   }
 };
+ghapi.prototype.getPath = function(div){
+  div = '#'+div;
+  var path = $(div).attr('data-key');
+  div = $(div).parent();
+  while($(div).attr('data-key')){
+    path = $(div).attr('data-key') + '/' + path;
+    div = $(div).parent();
+  }
+  return path;
+};
 ghapi.prototype.isDiff = function(div){
-    return $('#'+div).html().replace(/<br>/g,'\n') !== b[$('#'+div).attr('data-key')];
+    var path = this.getPath(div);
+    path = path.split('/');
+    value = this.files;
+    for(var i = 0; i < path.length; i++)
+      value = value[path[i]];
+    return $('#'+div).html().replace(/<br>/g,'\n') !== value;
 };
 var a;
 function authenticate(){
@@ -133,7 +161,7 @@ function authenticate(){
   localStorage.setItem('user',$('input#user').val());
   localStorage.setItem('repo',$('input#repo').val());
   localStorage.setItem('pass',$('input#pass').val());
-  console.log([a.getCommit(a.getCommitSha('master')).sha]);
+  go();a.displayBlobs(a.files,'tabs');
 }
 $('input#user').val(localStorage.getItem('user'));
 $('input#repo').val(localStorage.getItem('repo'));
