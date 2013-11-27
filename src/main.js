@@ -93,6 +93,31 @@ ghapi.prototype.treeToObject = function(tree_sha){
   }
   return out;
 };
+ghapi.prototype.displayBlobs = function(blobs,div){
+  var main = "";
+  var top = "<ul>";
+  var dir = "";
+  var i = 1;
+  for(var key in blobs){
+    top += "<li><a href=\"#" + div + '-' + i + "\">"+key+"</a></li>";
+    if(typeof blobs[key] === 'string')
+      main += "<div contenteditable data-key=\""+key+"\" id=\"" + div + '-' + i +"\">"+blobs[key].replace(/\n/g,'<br>')+"</div>";
+    i++;
+  }
+  
+  $("#"+div).html(top + "</ul>" + main);
+};
+ghapi.prototype.commitChanges = function(div){
+
+};
+ghapi.prototype.isDiff = function(blobs, div){
+  function diff(div,number){
+    return $('#'+div+'-'+number).html().replace(/<br>/g,'\n') !== b[$('#'+div+'-'+number).attr('data-key')];
+  }
+  for(var i = 1; i < $('#tabs').children().length; i++){
+  
+  }
+};
 var a;
 function authenticate(){
   a = new ghapi($('input#user').val(),$('input#repo').val(),$('input#pass').val());
