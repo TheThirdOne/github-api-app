@@ -7,6 +7,7 @@ function ghapi(user,repo,pass){
     }
 });
   this.repo = repo;
+  this.blobs = [];
 }
 function make_base_auth(user, password) {
   var tok = user + ':' + password;
@@ -38,8 +39,15 @@ ghapi.prototype.getCommitSha = function(ref){
 ghapi.prototype.getCommit = function(sha){
   return  this.getData('/git/commits/'+sha);
 };
-ghapi.prototype.makeTree = function(base,tree){
-  
+ghapi.prototype.addBlob = function(content){
+  this.blobs.push(this.putData('/git/blobs',JSON.stringify({"content":content,"encoding":"utf-8"})).sha);
+};
+ghapi.prototype.makeTree = function(base,paths){
+  var tree = [];
+  for(var i = 0; i < this.blobs.length; i++){
+    tree.push({"path":paths[i],"mode":"100644","type":"blob","sha":this.blobs[i]});
+  }
+  return {"base_tree":base,"tree":tree};
 };
 ghapi.prototype.getLeft = function(){
   console.log($.ajax({
@@ -50,6 +58,24 @@ ghapi.prototype.getLeft = function(){
     failure: function(){console.log('error');},
     dataType: 'json'
   }).getAllResponseHeaders());
+};
+ghapi.prototype.getUser = function(){
+  return $.ajax({
+    type: "GET",
+    url: 'https://api.github.com/users/'+this.user,
+    crossDomain: true,
+    async:false,
+    failure: function(){console.log('error');},
+    dataType: 'json'
+  }).responseJSON;
+};
+ghapi.prototype.makeCommit= function(message,parents,tree,branch){
+  var author = {"name":this.name,"email":this.getUser().email,"date":(new Date()).toISOString()};
+  var result = this.putData('/git/trees',JSON.stringify(tree));
+  var tosend = {"author":author,"message":message,"parents":parents,"tree":result.sha};
+  result = this.putData("/git/commits",JSON.stringify(tosend));
+  console.log(result);
+  this.send("/git/refs/heads/"+branch,JSON.stringify({"sha":result.sha}),"PATCH");
 };
 var a;
 function authenticate(){
@@ -67,14 +93,5 @@ function go(){
   commit = a.getCommit(a.getCommitSha('master'));
   parents = commit.sha;
   tree_base = commit.tree.sha;
-  /*console.log(a.putData("/git/commits",JSON.stringify({"message": "my commit message",
-  "author": {
-    "name": "Scott Chacon",
-    "email": "schacon@gmail.com",
-    "date": "2008-07-09T16:13:30+12:00"
-  },
-  "parents":[parents],"tree":tree_base})));
-  console.log(a.putData("/git/refs/heads/master",JSON.stringify({
-  "sha": "2ce41964c465ac08045b135f68d9fe39317ebcf0"
-})));*/
+  a.makeCommit("YAY",[parents],a.makeTree(tree_base,['hello.txt','yolo.txt']),"master");
 }
