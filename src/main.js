@@ -94,25 +94,33 @@ ghapi.prototype.treeToObject = function(tree_sha){
   return out;
 };
 ghapi.prototype.displayBlobs = function(blobs,div){
+  console.log(blobs,div)
   var main = "";
   var top = "<ul>";
-  var dir = "";
+  var todo = [];
   var i = 1;
   for(var key in blobs){
     top += "<li><a href=\"#" + div + '-' + i + "\">"+key+"</a></li>";
     if(typeof blobs[key] === 'string')
-      main += "<div contenteditable data-key=\""+key+"\" id=\"" + div + '-' + i +"\">"+blobs[key].replace(/\n/g,'<br>')+"</div>";
+      main += "<div contenteditable data-type=\"blob\" data-key=\""+key+"\" id=\"" + div + '-' + i +"\">"+blobs[key].replace(/\n/g,'<br>')+"</div>";
+    else{
+      todo.push({'key':key,'i':i});
+      main += "<div contenteditable data-type=\"tree\" data-key=\""+key+"\" id=\"" + div + '-' + i +"\"></div>";
+    }
     i++;
   }
   
   $("#"+div).html(top + "</ul>" + main);
+  $('#'+div).tabs();
+  for(var k in todo)
+    this.displayBlobs(blobs[todo[k].key],div + '-' +  todo[k].i);
 };
 ghapi.prototype.commitChanges = function(div){
 
 };
 ghapi.prototype.isDiff = function(blobs, div){
   function diff(div,number){
-    return $('#'+div+'-'+number).html().replace(/<br>/g,'\n') !== b[$('#'+div+'-'+number).attr('data-key')];
+    return $('#'+div+'-'+number).attr('data-type')!=='tree' && $('#'+div+'-'+number).html().replace(/<br>/g,'\n') !== b[$('#'+div+'-'+number).attr('data-key')];
   }
   for(var i = 1; i < $('#tabs').children().length; i++){
   
