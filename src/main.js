@@ -1,6 +1,10 @@
-var debug = true;
+var debug = {
+  'all':false,
+  'do':{},
+  'not':{},
+  };
 function ghapi(user,repo,pass){
-  if(debug)console.log('ghapi:',user,repo);
+  if(debug.do.ghapi | debug.all && !debug.not.ghapi)console.log('ghapi:',user,repo);
   this.user = user;
   this.password = pass;
   var auth = make_base_auth(user, pass);
@@ -25,21 +29,21 @@ function ghapi(user,repo,pass){
   this.paths = [];
 }
 function make_base_auth(user, password) {
-  if(debug)console.log('make_base_auth:',user);
+  if(debug.do.make_base_auth | debug.all && !debug.not.make_base_auth)console.log('make_base_auth:',user);
   var tok = user + ':' + password;
   var hash = btoa(tok);
   return "Basic " + hash;
 }
 ghapi.prototype.getData = function(url){
-  if(debug)console.log('getData:',url);
+  if(debug.do.getData | debug.all && !debug.not.getData)console.log('getData:',url);
   return this.send(url,{},"GET");
 };
 ghapi.prototype.putData = function(url,data){
-  if(debug)console.log('putData:',url,data);
+  if(debug.do.putData | debug.all && !debug.not.putData)console.log('putData:',url,data);
   return this.send(url,data,"POST");
 };
 ghapi.prototype.send = function(url,data,type){
-  if(debug)console.log('sendData:',url,data,type);
+  if(debug.do.send | debug.all && !debug.not.send)console.log('sendData:',url,data,type);
   return $.ajax({
     type: type,
     url: 'https://api.github.com/repos/'+this.repo+url,
@@ -53,19 +57,19 @@ ghapi.prototype.send = function(url,data,type){
   }).responseJSON;
 };
 ghapi.prototype.getCommitSha = function(ref){
-  if(debug)console.log('getCommitSha:',ref);
+  if(debug.do.getCommitSha | debug.all && !debug.not.getCommitSha)console.log('getCommitSha:',ref);
   return this.getData('/git/refs/heads/'+ ref).object.sha;
 };
 ghapi.prototype.getCommit = function(sha){
-  if(debug)console.log('getCommit:',sha);
+  if(debug.do.getCommit | debug.all && !debug.not.getCommit)console.log('getCommit:',sha);
   return  this.getData('/git/commits/'+sha);
 };
 ghapi.prototype.addBlob = function(content){
-  if(debug)console.log('addBlob:',content);
+  if(debug.do.addBlob | debug.all && !debug.not.addBlob)console.log('addBlob:',content);
   this.blobs.push(this.putData('/git/blobs',JSON.stringify({"content":content,"encoding":"utf-8"})).sha);
 };
 ghapi.prototype.makeTree = function(base,paths){
-  if(debug)console.log('makeTree:',base,paths);
+  if(debug.do.makeTree | debug.all && !debug.not.makeTree)console.log('makeTree:',base,paths);
   var tree = [];
   for(var i = 0; i < this.blobs.length; i++){
     tree.push({"path":paths[i],"mode":"100644","type":"blob","sha":this.blobs[i]});
@@ -73,7 +77,7 @@ ghapi.prototype.makeTree = function(base,paths){
   return {"base_tree":base,"tree":tree};
 };
 ghapi.prototype.getLeft = function(){
-  if(debug)console.log('getLeft:');
+  if(debug.do.getLeft | debug.all && !debug.not.getLeft)console.log('getLeft:');
   return $.ajax({
     type: "GET",
     url: 'https://api.github.com/zen',
@@ -84,7 +88,7 @@ ghapi.prototype.getLeft = function(){
   }).getAllResponseHeaders();
 };
 ghapi.prototype.getUser = function(){
-  if(debug)console.log('getUser:');
+  if(debug.do.getUser | debug.all && !debug.not.getUser)console.log('getUser:');
   return $.ajax({
     type: "GET",
     url: 'https://api.github.com/users/'+this.user,
@@ -95,7 +99,7 @@ ghapi.prototype.getUser = function(){
   }).responseJSON;
 };
 ghapi.prototype.makeCommit= function(message,parents,tree,branch){
-  if(debug)console.log('makeCommit:',message,parents,tree,branch);
+  if(debug.do.makeCommit | debug.all && !debug.not.makeCommit)console.log('makeCommit:',message,parents,tree,branch);
   var author = {"name":this.name,"email":this.getUser().email,"date":(new Date()).toISOString()};
   var result = this.putData('/git/trees',JSON.stringify(tree));
   var tosend = {"author":author,"message":message,"parents":parents,"tree":result.sha};
@@ -105,12 +109,12 @@ ghapi.prototype.makeCommit= function(message,parents,tree,branch){
   this.blobs = [];
 };
 ghapi.prototype.getFiles = function(sha){
-  if(debug)console.log('getFiles:',sha);
+  if(debug.do.getFiles | debug.all && !debug.not.getFiles)console.log('getFiles:',sha);
   var commit = this.getCommit(sha);
   return this.treeToObject(commit.tree.sha);
 };
 ghapi.prototype.treeToObject = function(tree_sha){
-  if(debug)console.log('treeToObject:',tree_sha);
+  if(debug.do.treeToObject | debug.all && !debug.not.treeToObject)console.log('treeToObject:',tree_sha);
   var out = {};
   var tree = this.getData('/git/trees/'+tree_sha).tree;
   for(var i = 0;i < tree.length; i++){
@@ -122,7 +126,7 @@ ghapi.prototype.treeToObject = function(tree_sha){
   return out;
 };
 ghapi.prototype.displayBlobs = function(blobs,div){
-  if(debug)console.log('displayBlobs:',blobs,div);
+  if(debug.do.displayBlobs | debug.all && !debug.not.displayBlobs)console.log('displayBlobs:',blobs,div);
   var main = "";
   var top = "<ul>";
   var todo = [];
@@ -143,7 +147,7 @@ ghapi.prototype.displayBlobs = function(blobs,div){
     this.displayBlobs(blobs[todo[k].key],div + '-' +  todo[k].i);
 };
 ghapi.prototype.commitChanges = function(div,message,branch){
-  if(debug)console.log('commitChanges:',div,message,branch);
+  if(debug.do.commitChanges | debug.all && !debug.not.commitChanges)console.log('commitChanges:',div,message,branch);
   this.makeBlobsFromDiff(div);
   commit = this.getCommit(this.getCommitSha(branch));
   parents = commit.sha;
@@ -151,7 +155,7 @@ ghapi.prototype.commitChanges = function(div,message,branch){
   this.makeCommit(message,[parents],this.makeTree(tree_base,this.paths),branch);
 };
 ghapi.prototype.makeBlobsFromDiff = function(div){
-  if(debug)console.log('makeBlobsFromDiff:',div);
+  if(debug.do.makeBlobsFromDiff | debug.all && !debug.not.makeBlobsFromDiff)console.log('makeBlobsFromDiff:',div);
   var todo = [];
   for(var i = 1; i < $('#'+div).children().length; i++){
     console.log('#'+div+'-'+i);
@@ -165,7 +169,7 @@ ghapi.prototype.makeBlobsFromDiff = function(div){
   }
 };
 ghapi.prototype.getPath = function(div){
-  if(debug)console.log('getPath:',div);
+  if(debug.do.getPath | debug.all && !debug.not.getPath)console.log('getPath:',div);
   div = '#'+div;
   var path = $(div).attr('data-key');
   div = $(div).parent();
@@ -176,7 +180,7 @@ ghapi.prototype.getPath = function(div){
   return path;
 };
 ghapi.prototype.isDiff = function(div){
-  if(debug)console.log('isDiff:',div);
+  if(debug.do.isDiff | debug.all && !debug.not.isDiff)console.log('isDiff:',div);
   var path = this.getPath(div);
   path = path.split('/');
   value = this.files;
@@ -185,16 +189,16 @@ ghapi.prototype.isDiff = function(div){
   return this.getValue(div) !== value;
 };
 ghapi.prototype.escape = function(str){
-  if(debug)console.log('escape:',str);
+  if(debug.do.escape | debug.all && !debug.not.escape)console.log('escape:',str);
   return str.replace(/</g,'&lt').replace(/>/g,'&gt').replace(/\n/g,'<br>').replace(/\ /g,'&nbsp');
 };
 ghapi.prototype.getValue = function(div){
-  if(debug)console.log('getValue:',div);
+  if(debug.do.getValue | debug.all && !debug.not.getValue)console.log('getValue:',div);
   return $('#'+div).html().replace(/<br>/g,'\n').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&nbsp;/g,' ');
 };
 var a;
 function authenticate(){
-  if(debug)console.log('authenticate');
+  if(debug.do.authenticate | debug.all && !debug.not.authenticate)console.log('authenticate');
   a = new ghapi($('input#user').val(),$('input#repo').val(),$('input#pass').val());
   localStorage.setItem('user',$('input#user').val());
   localStorage.setItem('repo',$('input#repo').val());
@@ -206,7 +210,7 @@ $('input#repo').val(localStorage.getItem('repo'));
 $('input#pass').val(localStorage.getItem('pass'));
 
 function go(){
-  if(debug)console.log('go');
+  if(debug.do.go |  debug.all && !debug.not.go)console.log('go');
   commit = a.getCommit(a.getCommitSha(a.branch));
   parents = commit.sha;
   
