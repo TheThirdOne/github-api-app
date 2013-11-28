@@ -10,13 +10,20 @@
     </script>
   </head>
   <body>
-    <form onSubmit="authenticate()" action="javascript:">
-      User: <input id="user" type="plain"></input>
-      Pass: <input id="pass" type="password"></input>
-      Repo: ([user/]repo[@branch])<input id="repo" type="plain"></input>
-      <input type="submit" value="CLONE!"></input>
-    </form>
+    <div id="login">
+      <form onSubmit="authenticate()" action="javascript:">
+        User: <input id="user" type="plain"></input>
+        Pass: <input id="pass" type="password"></input>
+        Repo: ([user/]repo[@branch])<input id="repo" type="plain"></input>
+        <input type="submit" value="CLONE!"></input>
+      </form>
+    </div>
+    <div id="menu" style="display:none">
+      <div id="repodata"></div>
+      <button onClick="commit();">Commit</button>
+      <button onClick="logout();">Exit</button>
+    </div>
     <script src="src/main.js"></script>
-    <div id="tabs"></div>
+    <div id="container">No data in Repo</div>
   </body>
 </html>

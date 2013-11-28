@@ -203,18 +203,30 @@ function authenticate(){
   localStorage.setItem('user',$('input#user').val());
   localStorage.setItem('repo',$('input#repo').val());
   localStorage.setItem('pass',$('input#pass').val());
-  go();a.displayBlobs(a.files,'tabs');
+  $('#login').hide();
+  $('#menu').show();
+  $('#repodata').html('Repo: &nbsp&nbsp'+ a.repo + '@' + a.branch);
+  go();
+  $('#container').html('<div id=\"tabs\"></div>');
+  a.displayBlobs(a.files,'tabs');
 }
 $('input#user').val(localStorage.getItem('user'));
 $('input#repo').val(localStorage.getItem('repo'));
 $('input#pass').val(localStorage.getItem('pass'));
-
+function logout(){
+  $('#login').show();
+  $('#menu').hide();
+  $('#container').html('No data in Repo');
+}
+function commit(){
+  
+}
 function go(){
-  if(debug.do.go |  debug.all && !debug.not.go)console.log('go');
-  commit = a.getCommit(a.getCommitSha(a.branch));
-  parents = commit.sha;
+  if(debug.do.go | debug.all && !debug.not.go)console.log('go');
+  var commit = a.getCommit(a.getCommitSha(a.branch));
+  var parents = commit.sha;
   
   a.files = a.getFiles(commit.sha);
-  tree_base = commit.tree.sha;
+  var tree_base = commit.tree.sha;
   //a.makeCommit("YAY",[parents],a.makeTree(tree_base,['hello.txt','yolo.txt']),"master");
 }
