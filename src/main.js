@@ -156,10 +156,10 @@ ghapi.prototype.isDiff = function(div){
     return this.getValue(div) !== value;
 };
 ghapi.prototype.escape = function(str){
-  return str.replace(/</g,'&lt').replace(/>/g,'&gt').replace(/\n/g,'<br>')
+  return str.replace(/</g,'&lt').replace(/>/g,'&gt').replace(/\n/g,'<br>').replace(/\ /g,'&nbsp');
 };
 ghapi.prototype.getValue = function(div){
-  return $('#'+div).html().replace(/<br>/g,'\n').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+  return $('#'+div).html().replace(/<br>/g,'\n').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&nbsp;/g,' ');
 };
 var a;
 function authenticate(){
