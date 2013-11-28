@@ -6,7 +6,17 @@ function ghapi(user,repo,pass){
         xhr.setRequestHeader('Authorization', make_base_auth(user, pass)); 
     }
 });
-  this.repo = repo;
+  if(repo.indexOf('/')===-1){
+    repo = user +'/'+ repo;
+  }
+  if(repo.indexOf('@')===-1){
+    this.branch = 'master';
+    this.repo = repo;
+  }else{
+    var temp = repo.split('@');
+    this.repo = temp[0];
+    this.branch = temp[1];
+  }
   this.blobs = [];
   this.files = [];
   this.paths = [];
@@ -25,7 +35,7 @@ ghapi.prototype.putData = function(url,data){
 ghapi.prototype.send = function(url,data,type){
   return $.ajax({
     type: type,
-    url: 'https://api.github.com/repos/'+this.user+'/'+this.repo+url,
+    url: 'https://api.github.com/repos/'+this.repo+url,
     crossDomain: true,
     data:data,
     username: this.user,
@@ -174,7 +184,7 @@ $('input#repo').val(localStorage.getItem('repo'));
 $('input#pass').val(localStorage.getItem('pass'));
 
 function go(){
-  commit = a.getCommit(a.getCommitSha('master'));
+  commit = a.getCommit(a.getCommitSha(a.branch));
   parents = commit.sha;
   
   a.files = a.getFiles(commit.sha);
