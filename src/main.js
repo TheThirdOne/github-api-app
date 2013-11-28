@@ -118,7 +118,7 @@ ghapi.prototype.displayBlobs = function(blobs,div){
     this.displayBlobs(blobs[todo[k].key],div + '-' +  todo[k].i);
 };
 ghapi.prototype.commitChanges = function(div,message,branch){
-  this.makeBlobsFromDiff(div)
+  this.makeBlobsFromDiff(div);
   commit = this.getCommit(this.getCommitSha(branch));
   parents = commit.sha;
   tree_base = commit.tree.sha;
