@@ -105,7 +105,7 @@ ghapi.prototype.displayBlobs = function(blobs,div){
   for(var key in blobs){
     top += "<li><a href=\"#" + div + '-' + i + "\">"+key+((typeof blobs[key] === 'string')?'':'/')+"</a></li>";
     if(typeof blobs[key] === 'string')
-      main += "<div contenteditable data-type=\"blob\" data-key=\""+key+"\" id=\"" + div + '-' + i +"\">"+blobs[key].replace(/\n/g,'<br>')+"</div>";
+      main += "<div contenteditable data-type=\"blob\" data-key=\""+key+"\" id=\"" + div + '-' + i +"\">"+this.escape(blobs[key])+"</div>";
     else{
       todo.push({'key':key,'i':i});
       main += "<div data-type=\"tree\" data-key=\""+key+"\" id=\"" + div + '-' + i +"\"></div>";
@@ -130,7 +130,7 @@ ghapi.prototype.makeBlobsFromDiff = function(div){
     console.log('#'+div+'-'+i);
     if($('#'+div+'-'+i).attr('data-type')==='blob'){
       if(this.isDiff(div+'-'+i)){
-        this.addBlob($('#'+div+'-'+i).html().replace(/<br>/g,'\n'));
+        this.addBlob(this.getValue(div+'-'+i));
         this.paths.push(this.getPath(div+'-'+i));
       }
     }else
@@ -153,7 +153,13 @@ ghapi.prototype.isDiff = function(div){
     value = this.files;
     for(var i = 0; i < path.length; i++)
       value = value[path[i]];
-    return $('#'+div).html().replace(/<br>/g,'\n') !== value;
+    return this.getValue(div) !== value;
+};
+ghapi.prototype.escape = function(str){
+  return str.replace(/</g,'&lt').replace(/>/g,'&gt').replace(/\n/g,'<br>')
+};
+ghapi.prototype.getValue = function(div){
+  return $('#'+div).html().replace(/<br>/g,'\n').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
 };
 var a;
 function authenticate(){
