@@ -148,24 +148,40 @@ ghapi.prototype.displayBlobs = function(blobs,div){
 };
 ghapi.prototype.commitChanges = function(div,message,branch){
   if(debug.do.commitChanges | debug.all && !debug.not.commitChanges)console.log('commitChanges:',div,message,branch);
-  this.makeBlobsFromDiff(div);
+  this.makeBlobsFromArray(this.makeArrayFromDiff(div));
+  this.commitCurrentBlobs(message,branch);
+};
+ghapi.prototype.commitCurrentBlobs=function(message,branch){
   commit = this.getCommit(this.getCommitSha(branch));
   parents = commit.sha;
   tree_base = commit.tree.sha;
   this.makeCommit(message,[parents],this.makeTree(tree_base,this.paths),branch);
-};
-ghapi.prototype.makeBlobsFromDiff = function(div){
+}
+ghapi.prototype.makeArrayFromDiff = function(div){
   if(debug.do.makeBlobsFromDiff | debug.all && !debug.not.makeBlobsFromDiff)console.log('makeBlobsFromDiff:',div);
-  var todo = [];
+  var values = [];
+  var paths = [];
   for(var i = 1; i < $('#'+div).children().length; i++){
     console.log('#'+div+'-'+i);
     if($('#'+div+'-'+i).attr('data-type')==='blob'){
       if(this.isDiff(div+'-'+i)){
-        this.addBlob(this.getValue(div+'-'+i));
-        this.paths.push(this.getPath(div+'-'+i));
+        values.push(this.getValue(div+'-'+i));
+        paths.push(this.getPath(div+'-'+i));
       }
-    }else
-      this.makeBlobsFromDiff(div+'-'+i);
+    }else{
+      var temp = this.makeArrayFromDiff(div+'-'+i);
+      for(var k = 0; k < temp[0].length;k++){
+        values.push(temp[1][k]);
+        paths.push(temp[0][k]);
+      };
+    }
+  }
+  return [paths,values];
+};
+ghapi.prototype.makeBlobsFromArray = function(arrays){
+  for(var k = 0; k < arrays[0].length; k++){
+    this.addBlob(arrays[1][k]);
+    this.paths.push(arrays[0][k]);
   }
 };
 ghapi.prototype.getPath = function(div){
@@ -218,8 +234,14 @@ function logout(){
   $('#menu').hide();
   $('#container').html('No data in Repo');
 }
-function commit(){
-  
+function makeCommit(){
+  var temp = a.makeArrayFromDiff('tabs');
+  out ='Files For Commit:\n';
+  for(var i = 0; i < temp[0].length;i++)
+    out+=temp[0][i]+'\n';
+  var message = prompt(out+'Commit Name');
+  a.makeBlobsFromArray(temp);
+  a.commitCurrentBlobs(message,a.branch)
 }
 function go(){
   if(debug.do.go | debug.all && !debug.not.go)console.log('go');
