@@ -1,0 +1,19 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="jquery-ui.css">
+    <script src="jquery-2.0.3.min.js"></script>
+  </head>
+  <body>
+    <div id="login">
+      <form onSubmit="authenticate()" action="javascript:">
+        User: <input id="user" type="plain"></input>
+        Pass: <input id="pass" type="password"></input>
+        <input type="submit" value="CLONE!"></input>
+      </form>
+      <button onClick="localStorage.clear();">Clear Data</button>
+    </div>
+    <div id="content">
+    </div>
+    <script src="src/main.js"></script>
+  </body>
+</html>
