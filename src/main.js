@@ -10,7 +10,7 @@ function ghapi(user,repo,pass){
   var auth = make_base_auth(user, pass);
   $.ajaxSetup({
   beforeSend: function (xhr){ 
-        xhr.setRequestHeader('Authorization', auth); 
+        xhr.setRequestHeader('Authorization',"Basic " + auth); 
     }
 });
   if(repo.indexOf('/')===-1){
@@ -32,7 +32,7 @@ function make_base_auth(user, password) {
   if(debug.do.make_base_auth | debug.all && !debug.not.make_base_auth)console.log('make_base_auth:',user);
   var tok = user + ':' + password;
   var hash = btoa(tok);
-  return "Basic " + hash;
+  return hash;
 }
 ghapi.prototype.getData = function(url){
   if(debug.do.getData | debug.all && !debug.not.getData)console.log('getData:',url);
@@ -111,7 +111,11 @@ ghapi.prototype.makeCommit= function(message,parents,tree,branch){
 ghapi.prototype.getFiles = function(sha){
   if(debug.do.getFiles | debug.all && !debug.not.getFiles)console.log('getFiles:',sha);
   var commit = this.getCommit(sha);
-  return this.treeToObject(commit.tree.sha);
+  if(sha === localStorage.lastsha)return JSON.parse(localStorage.files);
+  var tmp = this.treeToObject(commit.tree.sha)
+  localStorage.setItem('lastsha',sha);
+  localStorage.setItem('files',JSON.stringify(tmp));
+  return JSON.parse(localStorage.files);
 };
 ghapi.prototype.treeToObject = function(tree_sha){
   if(debug.do.treeToObject | debug.all && !debug.not.treeToObject)console.log('treeToObject:',tree_sha);
@@ -213,8 +217,8 @@ ghapi.prototype.getValue = function(div){
   return $('#'+div).html().replace(/<br>/g,'\n').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&nbsp;/g,' ');
 };
 var a;
-function authenticate(){
-  if(debug.do.authenticate | debug.all && !debug.not.authenticate)console.log('authenticate');
+function clone(){
+  if(debug.do.clone | debug.all && !debug.not.clone)console.log('clone');
   a = new ghapi($('input#user').val(),$('input#repo').val(),$('input#pass').val());
   localStorage.setItem('user',$('input#user').val());
   localStorage.setItem('repo',$('input#repo').val());
