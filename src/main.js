@@ -3,6 +3,10 @@ var debug = {
   'do':{},
   'not':{},
   };
+var binary = {
+  'png':true,
+  'jpg':true
+};
 function ghapi(user,repo,pass){
   if(debug.do.ghapi | debug.all && !debug.not.ghapi)console.log('ghapi:',user,repo);
   this.user = user;
@@ -25,7 +29,6 @@ function ghapi(user,repo,pass){
     this.branch = temp[1];
   }
   this.blobs = [];
-  this.files = [];
   this.paths = [];
 }
 function make_base_auth(user, password) {
@@ -109,10 +112,11 @@ ghapi.prototype.makeCommit= function(message,parents,tree,branch){
   this.blobs = [];
 };
 ghapi.prototype.getFiles = function(sha){
+  sha = sha || localStorage.lastsha;
   if(debug.do.getFiles | debug.all && !debug.not.getFiles)console.log('getFiles:',sha);
   var commit = this.getCommit(sha);
   if(sha === localStorage.lastsha)return JSON.parse(localStorage.files);
-  var tmp = this.treeToObject(commit.tree.sha)
+  var tmp = this.treeToObject(commit.tree.sha);
   localStorage.setItem('lastsha',sha);
   localStorage.setItem('files',JSON.stringify(tmp));
   return JSON.parse(localStorage.files);
@@ -120,12 +124,16 @@ ghapi.prototype.getFiles = function(sha){
 ghapi.prototype.treeToObject = function(tree_sha){
   if(debug.do.treeToObject | debug.all && !debug.not.treeToObject)console.log('treeToObject:',tree_sha);
   var out = {};
+  var t;
   var tree = this.getData('/git/trees/'+tree_sha).tree;
   for(var i = 0;i < tree.length; i++){
     if(tree[i].type === "tree")
       out[tree[i].path] = this.treeToObject(tree[i].sha);
-    else
-      out[tree[i].path] = atob(unescape(this.getData('/git/blobs/'+tree[i].sha).content).replace(/\n/g,''));
+    else{
+      t = tree[i].path.split('.')[1];
+      if(!binary[t])
+        out[tree[i].path] = atob(unescape(this.getData('/git/blobs/'+tree[i].sha).content).replace(/\n/g,''));
+    }
   }
   return out;
 };
@@ -160,13 +168,12 @@ ghapi.prototype.commitCurrentBlobs=function(message,branch){
   parents = commit.sha;
   tree_base = commit.tree.sha;
   this.makeCommit(message,[parents],this.makeTree(tree_base,this.paths),branch);
-}
+};
 ghapi.prototype.makeArrayFromDiff = function(div){
   if(debug.do.makeBlobsFromDiff | debug.all && !debug.not.makeBlobsFromDiff)console.log('makeBlobsFromDiff:',div);
   var values = [];
   var paths = [];
   for(var i = 1; i < $('#'+div).children().length; i++){
-    console.log('#'+div+'-'+i);
     if($('#'+div+'-'+i).attr('data-type')==='blob'){
       if(this.isDiff(div+'-'+i)){
         values.push(this.getValue(div+'-'+i));
@@ -177,7 +184,7 @@ ghapi.prototype.makeArrayFromDiff = function(div){
       for(var k = 0; k < temp[0].length;k++){
         values.push(temp[1][k]);
         paths.push(temp[0][k]);
-      };
+      }
     }
   }
   return [paths,values];
@@ -203,18 +210,22 @@ ghapi.prototype.isDiff = function(div){
   if(debug.do.isDiff | debug.all && !debug.not.isDiff)console.log('isDiff:',div);
   var path = this.getPath(div);
   path = path.split('/');
-  value = this.files;
+  value = this.getFiles();
   for(var i = 0; i < path.length; i++)
     value = value[path[i]];
   return this.getValue(div) !== value;
 };
 ghapi.prototype.escape = function(str){
-  if(debug.do.escape | debug.all && !debug.not.escape)console.log('escape:',str);
-  return str.replace(/</g,'&lt').replace(/>/g,'&gt').replace(/\n/g,'<br>').replace(/\ /g,'&nbsp');
+  if(debug.do.escape | debug.all && !debug.not.escape)console.log('escape:');
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>').replace(/\ /g,'&nbsp;');
+};
+ghapi.prototype.unescape = function(str){
+  if(debug.do.unescape | debug.all && !debug.not.unescape)console.log('unescape:',str);
+  return str.replace(/<br>/g,'\n').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&');
 };
 ghapi.prototype.getValue = function(div){
   if(debug.do.getValue | debug.all && !debug.not.getValue)console.log('getValue:',div);
-  return $('#'+div).html().replace(/<br>/g,'\n').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&nbsp;/g,' ');
+  return this.unescape($('#'+div).html());
 };
 var a;
 function clone(){
